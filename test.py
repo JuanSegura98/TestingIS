@@ -1,6 +1,7 @@
 import unittest
 import os
 import app_configuration as ac
+import recipes_interface as ri
 
 class TestAppConfiguration(unittest.TestCase):
     # Unit test: init_appconfig
@@ -34,6 +35,61 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertEqual(ac.save_config(config, "nonexistingpath/data.conf"), -1, "The error code is not correct")
         # Double check that the file is not created
         self.assertFalse(os.path.exists("nonexistingpath/data.conf"), "A configuration file was created when it should not")
+
+    # Unit test: load config
+    def test_load_config(self):
+        # Verify the error code for unexisting config
+        if(not os.path.exists("nonexistingpath/data.conf")):
+            self.assertEqual(ac.load_config("nonexistingpath/data.conf"), -1, "Tried to load an unexisting file")
+        
+        # Verify the loading of the configuration file
+        if(os.path.exists("cfg/data.conf")):
+            config = ac.load_config("cfg/data.conf")
+            self.assertTrue(config is not None)
+    
+    # Integration test:save and load config file
+    def test_save_load_config(self):
+        # Load the configuration for the first time
+        config = ac.init_appconfig()
+        # Change some values
+        config.allow_notifications = True    
+        config.dark_mode = True
+        config.security.require_password = False
+        
+        # Save the configuration
+        self.assertEqual(ac.save_config(config, "cfg/data.conf"), 0, "The configuration could not be saved")
+
+        # Load the configuration
+        config_loaded = ac.load_config("cfg/data.conf")
+
+        # Verify the values
+        self.assertTrue(config_loaded.allow_notifications, "Notifications value not loaded correctly")
+        self.assertTrue(config_loaded.dark_mode, "Darkmode value not loaded correctly")
+        self.assertFalse(config_loaded.security.require_password, "Require password value not loaded correctly")
+
+class TestRecipes(unittest.TestCase):
+    # Unit test: access recipes database
+    def get_recipes(self):
+        # Load the dummy database
+        ri.load_test_database()
+        # Retrieve data
+        recipes = ri.access_recipes_callback()
+        # Check the database connection and the number of entries (initial database contains 2)
+        self.assertEquals(len(recipes), 2, "Faulty database")
+
+    # Integration test: add/remove from favourites
+    def test_add_remove_favourites_recipes(self):
+        # Load the dummy database
+        ri.load_test_database()
+        # No recipes should be favourite by default
+        favourite_recipes = ri.get_favourite_recipes()
+        self.assertEquals(len(favourite_recipes), 0, "Dummy database initialised with favourites")
+
+        # Add to favourites
+        ri.add_favourites("Macarroni")
+        # Update favourites
+        favourite_recipes = ri.get_favourite_recipes()
+        self.assertEquals(len(favourite_recipes), 1, "Database not updated")
 
 
 if __name__ == '__main__':

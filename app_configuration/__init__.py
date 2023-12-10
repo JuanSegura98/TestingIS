@@ -25,6 +25,9 @@ def save_config(app_configuration, path):
     return 0
 
 def load_config(path):
+    # Verify the existance of load file
+    if not os.path.exists(path):
+       return -1
     # Read the serialized data from the file
     with open(path, "rb") as file:
         loaded_data = file.read()
