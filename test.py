@@ -2,6 +2,7 @@ import unittest
 import os
 import app_configuration as ac
 import recipes_interface as ri
+import users_interface   as ui
 
 class TestAppConfiguration(unittest.TestCase):
     # Unit test: init_appconfig
@@ -91,6 +92,30 @@ class TestRecipes(unittest.TestCase):
         favourite_recipes = ri.get_favourite_recipes()
         self.assertEquals(len(favourite_recipes), 1, "Database not updated")
 
+class TestUsers(unittest.TestCase):
+    # Unit test: access users database
+    def get_users(self):
+        # Load the users database
+        ui.load_users_test_database()
+        # Retrieve data
+        users = ui.access_users_callback()
+        #Check the database connection and the number of entries (initial database contains 3)
+        self.assertEquals(len(users), 3,"Faulty database")
+    
+
+    def test_add_remove_users(self):
+        # Load the dummy database
+        ui.load_users_test_database()
+        # Add a user
+        ui.add_user("Nacho", "Merino Balaguer")
+        # Check the database to see if it has been added
+        users = ui.get_user()
+        self.assertEquals(len(users), 4, "User not added")
+        # Remove user
+        ui.remove_user("Nacho", "Merino Balaguer")
+        # Check the database to see if it has been removed
+        users = ui.get_user()
+        self.assertEquals(len(users), 3, "User not removed")
 
 if __name__ == '__main__':
     unittest.main()
