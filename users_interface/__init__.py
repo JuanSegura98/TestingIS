@@ -90,8 +90,8 @@ def remove_user(name, password):
   rows = cursor.fetchall()
   if len(rows) == 1:
     cursor.execute("DELETE FROM users WHERE name = ?", (name,))
-  else:
-    print("User not found")
+  #else:
+   # print("User not found")
   # Commit the changes
   conn.commit()
 
