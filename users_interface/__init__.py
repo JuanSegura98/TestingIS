@@ -5,6 +5,14 @@ class UserInterface:
       self.require_password = True
       self.use_externalAPI = True
 
+class User_Session:
+  def __init__(self):
+    self.name = 'SesionAbierta'
+  def close_session(self):
+    self.name = 'SesionCerrada'
+  def open_session(self):
+    self.name = 'SesionAbierta'
+
 def load_users_test_database():
   # Connect to an existing database or create a new one
   conn = sqlite3.connect('db/users.db')

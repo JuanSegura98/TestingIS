@@ -136,6 +136,24 @@ class TestUsers(unittest.TestCase):
         # Check the database to see if it has been removed
         users = ui.get_user()
         self.assertEqual(len(users), 3, "User removed")
+    
+    #Integration test: Open session
+    def test_open_session(self):
+        #Load the app
+        session = ui.User_Session()
+        #Open the session
+        session.open_session()
+        #Verify the state of the session
+        self.assertEqual(session.name, 'SesionAbierta', "Session should be open")
+
+    #Integration test: Close session
+    def test_close_session(self):
+        #Load the app
+        session = ui.User_Session()
+        #Close the session
+        session.close_session()
+        #Verify the state of the session
+        self.assertEqual(session.name, 'SesionCerrada', "Session should be closed")
         
 if __name__ == '__main__':
     unittest.main()
