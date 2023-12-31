@@ -41,7 +41,7 @@ def load_users_test_database():
 
 
 
-def get_user():
+def get_users():
   # Connect to an existing database or create a new one
   try:
     conn = sqlite3.connect('db/users.db')

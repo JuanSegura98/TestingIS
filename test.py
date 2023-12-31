@@ -70,11 +70,11 @@ class TestAppConfiguration(unittest.TestCase):
 
 class TestRecipes(unittest.TestCase):
     # Unit test: access recipes database
-    def get_recipes(self):
+    def test_get_recipes(self):
         # Load the dummy database
         ri.load_test_database()
         # Retrieve data
-        recipes = ri.access_recipes_callback()
+        recipes = ri.get_recipes()
         # Check the database connection and the number of entries (initial database contains 2)
         self.assertEquals(len(recipes), 2, "Faulty database")
 
@@ -94,11 +94,11 @@ class TestRecipes(unittest.TestCase):
 
 class TestUsers(unittest.TestCase):
     # Unit test: access users database
-    def get_users(self):
+    def test_get_users(self):
         # Load the users database
         ui.load_users_test_database()
         # Retrieve data
-        users = ui.access_users_callback()
+        users = ui.get_users()
         #Check the database connection and the number of entries (initial database contains 3)
         self.assertEquals(len(users), 3,"Faulty database")
     
@@ -109,12 +109,12 @@ class TestUsers(unittest.TestCase):
         # Add a user
         ui.add_user("Nacho", "Merino Balaguer")
         # Check the database to see if it has been added
-        users = ui.get_user()
+        users = ui.get_users()
         self.assertEqual(len(users), 4, "User not added")
         # Remove user
         ui.remove_user("Nacho", "Merino Balaguer")
         # Check the database to see if it has been removed
-        users = ui.get_user()
+        users = ui.get_users()
         self.assertEqual(len(users), 3, "User not removed")
 
     #Integration test: failure to add users with invalid names to the database
@@ -124,7 +124,7 @@ class TestUsers(unittest.TestCase):
         # Add a user with invalid name or password
         ui.add_user("Esto_no_es_un_nombre_valido_para_un_usuario", "Esto_no_es_una_contraseña_valida_para_un_usuario")
         # Check the database to see if it has been added
-        users = ui.get_user()
+        users = ui.get_users()
         self.assertEqual(len(users), 3, "User added")
 
     #Integration test: failure to remove a user that doesnt exist in the database
@@ -134,7 +134,7 @@ class TestUsers(unittest.TestCase):
         # Try to remove a user that doesnt exists
         ui.remove_user("Esto_no_es_un_nombre_valido_para_un_usuario", "Esto_no_es_una_contraseña_valida_para_un_usuario")
         # Check the database to see if it has been removed
-        users = ui.get_user()
+        users = ui.get_users()
         self.assertEqual(len(users), 3, "User removed")
     
     #Integration test: Open session
