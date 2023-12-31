@@ -3,6 +3,7 @@ import os
 import app_configuration as ac
 import recipes_interface as ri
 import users_interface   as ui
+import recipes_api   as ra
 
 class TestAppConfiguration(unittest.TestCase):
     # Unit test: init_appconfig
@@ -69,6 +70,16 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertFalse(config_loaded.security.require_password, "Require password value not loaded correctly")
 
 class TestRecipes(unittest.TestCase):
+    # Unit test: access recipes window
+    def test_init_botonrecipespulsado(self):
+        # Load the app for the first time
+        ventana = ra.CurrentWindow()
+        # Click on button recipes
+        ventana.recipes_callback()
+   
+        #Verify the window has changed to recipes 
+        self.assertEqual(ventana.name, 'RecipesWindow', "Window should change to 'RecipesWindow'")   
+
     # Unit test: access recipes database
     def test_get_recipes(self):
         # Load the dummy database
@@ -76,7 +87,7 @@ class TestRecipes(unittest.TestCase):
         # Retrieve data
         recipes = ri.get_recipes()
         # Check the database connection and the number of entries (initial database contains 2)
-        self.assertEquals(len(recipes), 2, "Faulty database")
+        self.assertEqual(len(recipes), 2, "Faulty database")
 
     # Integration test: add/remove from favourites
     def test_add_remove_favourites_recipes(self):
@@ -100,7 +111,7 @@ class TestUsers(unittest.TestCase):
         # Retrieve data
         users = ui.get_users()
         #Check the database connection and the number of entries (initial database contains 3)
-        self.assertEquals(len(users), 3,"Faulty database")
+        self.assertEqual(len(users), 3,"Faulty database")
     
     #Integration test: add/remove users from the database
     def test_add_remove_users(self):
@@ -154,6 +165,62 @@ class TestUsers(unittest.TestCase):
         session.close_session()
         #Verify the state of the session
         self.assertEqual(session.name, 'SesionCerrada', "Session should be closed")
+
         
+class TestAPIconection(unittest.TestCase):
+    # Unit test: API conection
+    def test_init_APIconnection(self):
+        #instance of API
+        recipes_api = ra.RecipesAPI()
+        #API funciona correctamente
+        recipes_api.APIAvailable = True
+        recipes_api.message= False
+        #verify the connection is right 
+        self.assertTrue(recipes_api.APIAvailable,'App should conncect API')
+        self.assertFalse(recipes_api.message,'App should not show the message')
+        
+        #Verify the message is visible when there is no connection
+        #recipes_api.APIAvailable=False
+        #self.assertFalse(recipes_api.APIAvailable,'App should NOT conncect API')
+        #En el instante en que se comprueba message debe ser falso todavia
+        #self.assertFalse(recipes_api.message,'App should not show the message') 
+        #recipes_api.message=True
+        #Messaje is shown on scren 
+        #ra.ErrorMessage(True)
+        #self.assertFalse(recipes_api.APIAvailable,'App should NOT conncect API')
+        #self.assertTrue(recipes_api.message,'App should not show the message') 
+        #Verify the message is visible when there is no connection
+
+        recipes_api.error()
+        self.assertFalse(recipes_api.APIAvailable,'App should NOT conncect API')
+        #Message should be in screen
+        self.assertTrue(recipes_api.message,'App should not show the message') 
+        
+
+class TestRecipeSearch (unittest.TestCase):
+    #Unit test: API conection
+    def test_init_APIconnection(self):
+        #instance of API
+        recipes_api = ra.RecipesAPI()
+        #Verify API is available
+        recipes_api.APIAvailable = True
+        recipes_api.message= False
+        #verify the connection is right 
+        self.assertTrue(recipes_api.APIAvailable,'App should conncect API')
+        self.assertFalse(recipes_api.message,'App should not show the message')
+
+    def test_init_Search_bar(self):
+        search = ra.SearchBar()
+        search.visibilitykeyboard=False
+        #verify keyboard is hidden 
+        self.assertFalse(search.visibilitykeyboard,'Keyboard should be hidden')
+        #User click on the search bar
+        search.searchbar_callback()
+        self.assertTrue(search.visibilitykeyboard, 'keyboard should be visible')
+        #Get the recipe name form the search bar 
+        search.recipesearch()
+        self.assertTrue(search.recipe,'The recipe name has been lost')
+        self.assertTrue(search.recipefound,'Should NOT  be a recipe with this name')      
+
 if __name__ == '__main__':
     unittest.main()
