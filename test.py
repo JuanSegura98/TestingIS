@@ -4,6 +4,7 @@ import app_configuration as ac
 import recipes_interface as ri
 import users_interface   as ui
 import recipes_api   as ra
+import inventory_interface as ii
 
 class TestAppConfiguration(unittest.TestCase):
     # Unit test: init_appconfig
@@ -166,7 +167,93 @@ class TestUsers(unittest.TestCase):
         #Verify the state of the session
         self.assertEqual(session.name, 'SesionCerrada', "Session should be closed")
 
-        
+class TestInventario(unittest.TestCase):
+    # Unit test: access inventory database
+    def test_get_inventory(self):
+        # Load the users database
+        ii.load_inventory_test_database()
+        # Retrieve data
+        inventory = ii.get_inventory()
+        #Check the database connection and the number of entries (initial database contains 3)
+        self.assertEqual(len(inventory), 6,"Faulty database")
+
+    # Unit test: inventory edition
+    def test_edit_inventory(self):
+        # Load the users database
+        ii.load_inventory_test_database()
+        # Edit the element
+        ii.edit_inventory("Huevo", "Huevos", 12, ["Alimento proteico"])
+        # Get the current values of the element
+        inventory = ii.get_inventory()
+        edited_element = next((item for item in inventory if item[1] == "Huevos"), None)
+        # Validation
+        self.assertIsNotNone(edited_element, "El elemento editado no se encuentra en la base de datos")
+        self.assertEqual(edited_element[2], 12, "La cantidad del elemento editado no coincide")
+        self.assertIn("Alimento proteico", edited_element[4], "La etiqueta 'Proteína' no se encuentra en las etiquetas del elemento")
+
+    # Unit test: tag elimination
+    def test_delete_tags(self):
+        # Load the users database
+        ii.load_inventory_test_database()
+        # Delete the tags
+        ii.edit_inventory("Leche", "Leche", 2, [], ["Bebida"])
+        # Get the current values of the element
+        inventory = ii.get_inventory()
+        edited_element = next((item for item in inventory if item[1] == "Leche"), None)
+        # Validation
+        self.assertIsNotNone(edited_element, "Elemento no encontrado en el inventario")
+        self.assertEqual(edited_element[4], "Lacteo", "Las etiquetas no se eliminaron correctamente")
+
+    # Unit test: inventory order by modified
+    def test_order_inventory(self):
+        # Load the users database
+        ii.load_inventory_test_database()
+        # Order the elements
+        ii.order_inventory("modified")
+        # Get the current values of the elements
+        inventory = ii.get_inventory()
+        # Validation
+        self.assertEqual(inventory[0][1], "Leche", "El primer elemento no está ordenado correctamente por nombre")
+        self.assertEqual(inventory[-1][1], "Queso", "El último elemento no está ordenado correctamente por nombre")
+
+    # Unit test: inventory filter by name
+    def test_filter_inventory(self):
+        # Load the users database
+        ii.load_inventory_test_database()
+        # Filter the elements
+        ii.filter_inventory("name", "Tomate")
+        # Get the current values of the element
+        inventory = ii.get_inventory()
+        # Validation
+        self.assertTrue(all("Tomate" in item[1] for item in inventory), "No todos los elementos tienen el nombre 'Tomate'")
+        self.assertFalse(any("Manzana" in item[1] for item in inventory), "Se encontró un elemento con el nombre 'Manzana'")
+
+    # Integration test
+    def test_integration(self):
+        # Load the users database
+        ii.load_inventory_test_database()
+        # Edit the elements
+        ii.edit_inventory("Manzana", "Manzana", 2, ["Favorito"])
+        ii.edit_inventory("Queso", "Queso", 2, ["Favorito"])
+        ii.edit_inventory("Huevo", "Huevos", 12, ["Favorito"], ["Alimento proteico"])
+        ii.edit_inventory("Leche", "Leche", 2, ["Favorito"])
+        # Filter the elements
+        ii.filter_inventory("tags", "Favorito")
+        # Order the elements
+        ii.order_inventory("name")
+        # Get the current values of the element
+        inventory = ii.get_inventory()
+        edited_element = next((item for item in inventory if item[1] == "Huevos"), None)
+        # Validation of one of the edited elements
+        self.assertIsNotNone(edited_element, "El elemento editado no se encuentra en la base de datos")
+        self.assertEqual(edited_element[2], 12, "La cantidad del elemento editado no coincide")
+        self.assertIn("Alimento proteico", edited_element[4], "La etiqueta 'Proteína' no se encuentra en las etiquetas del elemento")
+        # Filter validation
+        self.assertTrue(all("Favorito" in item[4] for item in inventory), "No todos los elementos tienen la etiqueta 'Favorito'")
+        # Order validation
+        self.assertEqual(inventory[0][1], "Huevos", "El primer elemento no está ordenado correctamente por nombre")
+        self.assertEqual(inventory[-1][1], "Queso", "El último elemento no está ordenado correctamente por nombre")
+
 class TestAPIconection(unittest.TestCase):
     # Unit test: API conection
     def test_init_APIconnection(self):
@@ -195,7 +282,7 @@ class TestAPIconection(unittest.TestCase):
         self.assertFalse(recipes_api.APIAvailable,'App should NOT conncect API')
         #Message should be in screen
         self.assertTrue(recipes_api.message,'App should not show the message') 
-        
+
 
 class TestRecipeSearch (unittest.TestCase):
     #Unit test: API conection
