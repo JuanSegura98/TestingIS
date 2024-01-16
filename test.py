@@ -246,10 +246,10 @@ class TestInventario(unittest.TestCase):
         ii.edit_inventory("Queso", "Queso", 2, ["Favorito"])
         ii.edit_inventory("Huevo", "Huevos", 12, ["Favorito","Alimento proteico"])
         ii.edit_inventory("Leche", "Leche", 2, ["Favorito"])
-        # Order the elements
-        ii.order_inventory("name")
         # Filter the elements
         ii.filter_inventory("tags", "Favorito")
+        # Order the elements
+        ii.order_inventory("name")
         # Get the current values of the element
         inventory = ii.get_inventory()
         edited_element = next((item for item in inventory if item[1] == "Huevos"), None)
@@ -257,11 +257,11 @@ class TestInventario(unittest.TestCase):
         self.assertIsNotNone(edited_element, "El elemento editado no se encuentra en la base de datos")
         self.assertEqual(edited_element[2], 12, "La cantidad del elemento editado no coincide")
         self.assertIn("Alimento proteico", edited_element[5], "La etiqueta 'Alimento proteico' no se encuentra en las etiquetas del elemento")
+        # Filter validation
+        self.assertTrue(all("Favorito" in item[5] for item in inventory), "No todos los elementos tienen la etiqueta 'Favorito'")
         # Order validation
         self.assertEqual(inventory[0][1], "Huevos", "El primer elemento no está ordenado correctamente por nombre")
         self.assertEqual(inventory[-1][1], "Queso", "El último elemento no está ordenado correctamente por nombre")
-        # Filter validation
-        self.assertTrue(all("Favorito" in item[5] for item in inventory), "No todos los elementos tienen la etiqueta 'Favorito'")
 
 
 class TestAPIconection(unittest.TestCase):
