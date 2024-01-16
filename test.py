@@ -1,10 +1,12 @@
 import unittest
 import os
+import json
 import app_configuration as ac
 import recipes_interface as ri
 import users_interface   as ui
 import recipes_api   as ra
 import inventory_interface as ii
+
 
 class TestAppConfiguration(unittest.TestCase):
     # Unit test: init_appconfig
@@ -70,6 +72,7 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertTrue(config_loaded.dark_mode, "Darkmode value not loaded correctly")
         self.assertFalse(config_loaded.security.require_password, "Require password value not loaded correctly")
 
+
 class TestRecipes(unittest.TestCase):
     # Unit test: access recipes window
     def test_init_botonrecipespulsado(self):
@@ -103,6 +106,7 @@ class TestRecipes(unittest.TestCase):
         # Update favourites
         favourite_recipes = ri.get_favourite_recipes()
         self.assertEqual(len(favourite_recipes), 1, "Database not updated")
+
 
 class TestUsers(unittest.TestCase):
     # Unit test: access users database
@@ -167,6 +171,7 @@ class TestUsers(unittest.TestCase):
         #Verify the state of the session
         self.assertEqual(session.name, 'SesionCerrada', "Session should be closed")
 
+
 class TestInventario(unittest.TestCase):
     # Unit test: access inventory database
     def test_get_inventory(self):
@@ -189,7 +194,7 @@ class TestInventario(unittest.TestCase):
         # Validation
         self.assertIsNotNone(edited_element, "El elemento editado no se encuentra en la base de datos")
         self.assertEqual(edited_element[2], 12, "La cantidad del elemento editado no coincide")
-        self.assertIn("Alimento proteico", edited_element[4], "La etiqueta 'Proteína' no se encuentra en las etiquetas del elemento")
+        self.assertIn("Alimento proteico", edited_element[5], "La etiqueta 'Proteína' no se encuentra en las etiquetas del elemento")
 
     # Unit test: tag elimination
     def test_delete_tags(self):
@@ -200,9 +205,13 @@ class TestInventario(unittest.TestCase):
         # Get the current values of the element
         inventory = ii.get_inventory()
         edited_element = next((item for item in inventory if item[1] == "Leche"), None)
+        edited_tags = json.loads(edited_element[5])
         # Validation
         self.assertIsNotNone(edited_element, "Elemento no encontrado en el inventario")
-        self.assertEqual(edited_element[4], "Lacteo", "Las etiquetas no se eliminaron correctamente")
+        # Check if 'Bebida' tag was deleted correctly
+        self.assertNotIn("Bebida", edited_tags, "La etiqueta 'Bebida' no se eliminó correctamente")
+        # Check if 'Lacteo' tag is still present
+        self.assertIn("Lacteo", edited_tags, "La etiqueta 'Lacteo' debería estar presente")
 
     # Unit test: inventory order by modified
     def test_order_inventory(self):
@@ -210,11 +219,11 @@ class TestInventario(unittest.TestCase):
         ii.load_inventory_test_database()
         # Order the elements
         ii.order_inventory("modified")
-        # Get the current values of the elements
+        # Get the current values of the element
         inventory = ii.get_inventory()
         # Validation
-        self.assertEqual(inventory[0][1], "Leche", "El primer elemento no está ordenado correctamente por nombre")
-        self.assertEqual(inventory[-1][1], "Queso", "El último elemento no está ordenado correctamente por nombre")
+        self.assertEqual(inventory[0][1], "Queso", "El primer elemento no está ordenado correctamente por fecha de modificación")
+        self.assertEqual(inventory[-1][1], "Leche", "El último elemento no está ordenado correctamente por fecha de modificación")
 
     # Unit test: inventory filter by name
     def test_filter_inventory(self):
@@ -235,24 +244,25 @@ class TestInventario(unittest.TestCase):
         # Edit the elements
         ii.edit_inventory("Manzana", "Manzana", 2, ["Favorito"])
         ii.edit_inventory("Queso", "Queso", 2, ["Favorito"])
-        ii.edit_inventory("Huevo", "Huevos", 12, ["Favorito"], ["Alimento proteico"])
+        ii.edit_inventory("Huevo", "Huevos", 12, ["Favorito","Alimento proteico"])
         ii.edit_inventory("Leche", "Leche", 2, ["Favorito"])
-        # Filter the elements
-        ii.filter_inventory("tags", "Favorito")
         # Order the elements
         ii.order_inventory("name")
+        # Filter the elements
+        ii.filter_inventory("tags", "Favorito")
         # Get the current values of the element
         inventory = ii.get_inventory()
         edited_element = next((item for item in inventory if item[1] == "Huevos"), None)
         # Validation of one of the edited elements
         self.assertIsNotNone(edited_element, "El elemento editado no se encuentra en la base de datos")
         self.assertEqual(edited_element[2], 12, "La cantidad del elemento editado no coincide")
-        self.assertIn("Alimento proteico", edited_element[4], "La etiqueta 'Proteína' no se encuentra en las etiquetas del elemento")
-        # Filter validation
-        self.assertTrue(all("Favorito" in item[4] for item in inventory), "No todos los elementos tienen la etiqueta 'Favorito'")
+        self.assertIn("Alimento proteico", edited_element[5], "La etiqueta 'Alimento proteico' no se encuentra en las etiquetas del elemento")
         # Order validation
         self.assertEqual(inventory[0][1], "Huevos", "El primer elemento no está ordenado correctamente por nombre")
         self.assertEqual(inventory[-1][1], "Queso", "El último elemento no está ordenado correctamente por nombre")
+        # Filter validation
+        self.assertTrue(all("Favorito" in item[5] for item in inventory), "No todos los elementos tienen la etiqueta 'Favorito'")
+
 
 class TestAPIconection(unittest.TestCase):
     # Unit test: API conection
@@ -308,6 +318,7 @@ class TestRecipeSearch (unittest.TestCase):
         search.recipesearch()
         self.assertTrue(search.recipe,'The recipe name has been lost')
         self.assertTrue(search.recipefound,'Should NOT  be a recipe with this name')      
+
 
 if __name__ == '__main__':
     unittest.main()
